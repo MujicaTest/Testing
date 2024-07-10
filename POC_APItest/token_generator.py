@@ -4,7 +4,7 @@ import json
 import requests
 
 def generate_m2m_token(grant_type, client_id, client_secret, audience):
-    url = "https://www.token.com/oauth/token"
+    url = "https://id-shadow.sage.com/oauth/token"
     headers = {
         "Content-Type": "application/json"
     }
@@ -24,9 +24,9 @@ def generate_m2m_token(grant_type, client_id, client_secret, audience):
 
 def generate_token(environment):
     grant_type = "client_credentials"
-    client_id = "your_client_id"
-    client_secret = "your_client_secret"
-    audience = "your_audience"
+    client_id = "8JIpa0ybrPwz3moWiqUoc6EmKaVy4NZO"
+    client_secret = "_q9nUnj96Ppx4r1R32ut1dncJNbpfeDtW6GPBXQ-KJk1YgAjfHOMjPH-deBFAjdy"
+    audience = "snet-dev/network/api"
     
     token = generate_m2m_token(grant_type, client_id, client_secret, audience)
     

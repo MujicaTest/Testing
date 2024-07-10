@@ -32,11 +32,15 @@ class APIClient:
         return response.json()
 
     def create_account(self, account_data):
-        idempotency_key = str(uuid.uuid4())
+        idempotency_key = str(uuid.uuid())
         endpoint = ENDPOINTS["create_account"]
         return self.post(endpoint, account_data, idempotency_key)
 
     def create_dataset(self, account_id, dataset_data):
-        idempotency_key = str(uuid.uuid4())
+        idempotency_key = str(uuid.uuid1())
         endpoint = ENDPOINTS["create_dataset"].format(account_id=account_id)
         return self.post(endpoint, dataset_data, idempotency_key)
+    
+    def get_datasetId(self, dataset_id):
+        endpoint = ENDPOINTS["get_dataset_id"].format(dataset_id=)
+        return self.post(endpoint, dataset_data)
