@@ -9,8 +9,6 @@ import urllib.parse
 import argparse
 import logging
 
-## Only Works in test environments and not in production
-
 class SageIDAuthAutomation:
 
     def __init__(self, client_id, redirect_uri, scope, audience, username, password, verbose):

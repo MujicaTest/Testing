@@ -30,7 +30,7 @@ def generate_token(environment):
     
     token = generate_m2m_token(grant_type, client_id, client_secret, audience)
     
-    with open("token.json", "w") as file:
+    with open("m2m_token.json", "w") as file:
         json.dump({"token": token}, file)
 
 if __name__ == "__main__":
