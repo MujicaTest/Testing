@@ -1,5 +1,5 @@
 # my_api_project/request_bodies.py
-
+import uuid
 def generate_account_body(IDfromProduct, product_Name, LoggedInUserEmail, LoggedInUserAuth0PrincipalId):
     return {
         "data": {

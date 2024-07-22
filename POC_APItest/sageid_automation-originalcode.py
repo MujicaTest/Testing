@@ -1,4 +1,3 @@
-# sageid_auth.py
 
 import requests
 import base64
@@ -25,6 +24,7 @@ class SageIDAuthAutomation:
         logging.basicConfig(level=logging.DEBUG if self.verbose else logging.INFO)
         self.logger = logging.getLogger(__name__)
 
+
         self.headers = {
             'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'
@@ -45,18 +45,45 @@ class SageIDAuthAutomation:
         self.debug_output = False
 
     def get_access_token(self):
-        """Obtains the access token by setting up authentication and retrieving OAuth token data."""
+        """
+        Obtains the access token by setting up authentication and retrieving OAuth token data.
+
+        This function performs the following steps:
+        1. Sets up authentication by calling the auth_setup() method.
+        2. Retrieves OAuth token data by calling the get_oauth_token_data() method.
+        3. Prints the access token if verbose mode is not enabled.
+
+        Example:
+            some_instance = SomeClass()
+            some_instance.get_access_token()
+        """
         self.auth_setup()
         token_data = self.get_oauth_token_data()
-        
+
+        if not self.verbose:
+           print(token_data['access_token'])
+
         # Save the token to a file
         with open("user_token.json", "w") as file:
-            json.dump({"token": token_data['access_token']}, file)
-        
-        return token_data['access_token']
+             json.dump({"token": token_data['access_token']}, file)
+
+        self.auth_setup()
+        token_data = self.get_oauth_token_data()
+
+        if not self.verbose:
+            print(token_data['access_token'])
 
     def auth_setup(self):
-        """Sets up the authentication process by performing necessary HTTP requests."""
+        """
+        Sets up the authentication process by performing necessary HTTP requests.
+
+        This function performs the following steps:
+        1. Sends a GET request to obtain authorization.
+        2. Parses the authorization URL to extract login redirect URL and login state.
+        3. Sends a GET request to the login redirect URL to obtain CSRF token.
+
+        """
+
         authorize = self.session.get("https://id-shadow.sage.com/authorize?"+self.url_params, allow_redirects=True)
         login_redirect = authorize.url
 
@@ -67,7 +94,21 @@ class SageIDAuthAutomation:
         self.logger.debug("CSRF: " + self._csrf)
 
     def get_oauth_token_data(self):
-        """Fetches OAuth token data by following a series of steps involving HTTP requests."""
+        """
+        Fetches OAuth token data by following a series of steps involving HTTP requests.
+
+        This function performs the following steps:
+        1. Sends a POST request to obtain a challenge.
+        2. Sends a POST request to login using username and password.
+        3. Parses the response HTML to extract necessary data.
+        4. Sends a callback POST request with extracted data.
+        5. Sends a POST request to obtain the OAuth token.
+
+        Returns:
+            dict: A dictionary containing OAuth token data.
+
+        """
+
         challenge = self.session.post(self.shadow_usernamepassword_challenge_endpoint, json={"state": self.login_state})
         self.logger.debug("usernamepassword/challenge: " + str(challenge.status_code))
 
@@ -129,21 +170,59 @@ class SageIDAuthAutomation:
         oauth_token = self.session.post(self.shadow_oauth_token_endpoint, json=auth_token_post)
         self.logger.debug("oauth/token: " + str(oauth_token.status_code))
 
-        self.logger.debug("Received OAuth Token: " + str(oauth_token.json()))
+        self.logger.debug("Recieved OAuth Token: " + str(oauth_token.json()))
         return oauth_token.json()
 
     def get_url_param(self, params, id):
-        """Extracts a parameter value from a list of URL parameters."""
+        """
+        Extracts a parameter value from a list of URL parameters.
+
+        Args:
+            params (list): List of URL parameters.
+            id (str): Identifier of the parameter to extract.
+
+        Returns:
+            str: The value associated with the specified parameter identifier.
+
+        Example:
+            get_url_param(["param1=value1", "param2=value2"], "param1") 
+            # Output: "value1"
+        """
         for param in params:
             if id in param:
                 return param.split("=")[1]
 
     def generate_code_verifier(self, length=128):
-        """Generates a code verifier for OAuth2 PKCE (Proof Key for Code Exchange) flow."""
+        """
+        Generates a code verifier for OAuth2 PKCE (Proof Key for Code Exchange) flow.
+
+        Args:
+            length (int, optional): Length of the code verifier. Defaults to 128.
+
+        Returns:
+            str: The generated code verifier.
+
+        Example:
+            generate_code_verifier() 
+            # Output: "8R3h0TcPGn8t2LZfYJj2Dp6qoTR5Hy0h9GDbm0I5oTzP..."
+        """
         return secrets.token_urlsafe(length)
 
     def generate_code_challenge(self, code_verifier):
-        """Generates a code challenge from a code verifier for OAuth2 PKCE (Proof Key for Code Exchange) flow."""
+        """
+        Generates a code challenge from a code verifier for OAuth2 PKCE (Proof Key for Code Exchange) flow.
+
+        Args:
+            code_verifier (str): The code verifier to generate the challenge from.
+
+        Returns:
+            str: The generated code challenge.
+
+        Example:
+            code_verifier = "8R3h0TcPGn8t2LZfYJj2Dp6qoTR5Hy0h9GDbm0I5oTzP..."
+            generate_code_challenge(code_verifier)
+            # Output: "EX81PxM_i4oF_5k3k7jI8w_6UpfFgqhk_r_mXbKtZB0"
+        """
         code_challenge = hashlib.sha256(code_verifier.encode()).digest()
         return base64.urlsafe_b64encode(code_challenge).decode().rstrip("=")
 
@@ -176,3 +255,23 @@ def main():
 
     args = parser.parse_args()
     if(args.help or args.client_id is None
+                    or args.redirect_uri is None
+                    or args.scope is None
+                    or args.audience is None
+                    or args.username is None
+                    or args.password is None
+                    or args.verbose is None):
+        print_help()
+        return
+
+    sageid_automation = SageIDAuthAutomation(args.client_id,
+                                                args.redirect_uri,
+                                                args.scope,
+                                                args.audience,
+                                                args.username,
+                                                args.password,
+                                                args.verbose)
+    sageid_automation.get_access_token()
+
+if __name__ == "__main__":
+    main()

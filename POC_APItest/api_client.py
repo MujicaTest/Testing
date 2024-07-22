@@ -4,8 +4,9 @@ import json
 import uuid
 import time
 from config import Config, ENDPOINTS
+from POC_APItest.sageid_automation import SageIDAuthAutomation
 class APIClient:
-    def __init__(self, environment, token_file="token.json", user_token_file="user_token.json"):
+    def __init__(self, environment, token_file="m2m_token.json", user_token_file="user_token.json"):
         # Set base URL based on environment
         self.base_url = Config.get_base_url(environment)
         if not self.base_url:
