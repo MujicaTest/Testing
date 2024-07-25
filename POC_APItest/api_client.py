@@ -4,17 +4,32 @@ import json
 import uuid
 import time
 from config import Config, ENDPOINTS
-from POC_APItest.sageid_automation import SageIDAuthAutomation
+from sageid_auth import SageIDAuthAutomation
+import configparser
+
 class APIClient:
     def __init__(self, environment, token_file="m2m_token.json", user_token_file="user_token.json"):
         # Set base URL based on environment
         self.base_url = Config.get_base_url(environment)
         if not self.base_url:
             raise ValueError(f"Invalid environment: {environment}")
-
         # Read tokens from files
         self.token = self._read_token(token_file)
         self.user_token = self._read_token(user_token_file)
+        
+    def __init__(self, client_id, redirect_uri, scope, audience, username, password, verbose=False):
+        self.auth = SageIDAuthAutomation(client_id, redirect_uri, scope, audience, username, password, verbose)
+        self.base_url = "https://api.example.com"
+        self.token = self.get_bearer_token()
+
+    def get_bearer_token(self):
+        # Generate and save the token
+        self.auth.get_access_token()
+        
+        # Read the token from the file
+        with open("user_token.json", "r") as file:
+            token_data = json.load(file)
+        return token_data["token"]
 
     def _read_token(self, token_file):
         """Read token from a specified file."""

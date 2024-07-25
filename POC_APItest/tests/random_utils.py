@@ -19,6 +19,12 @@ def get_random_company():
             "Wayne Enterprises",
             "Stark Industries",
             "Umbrella Corporation",
+            "Boring Company",
+            "Vought International",
+            "Nintendo Co., Ltd.",
+            "UbiSoft Entertainment",
+            "Microsoft Corporation",
+            "CrowdStrike Holdings, Inc"
             # Add more fictional companies here...
     ]
     return random.choice(companies)
