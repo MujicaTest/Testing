@@ -56,21 +56,21 @@ class SageIDAuthAutomation:
             some_instance = SomeClass()
             some_instance.get_access_token()
         """
-        self.auth_setup()
         token_data = self.get_oauth_token_data()
+        if token_data is None:
+            self.logger.error("Failed to retrieve token data.")
+            return  # Or handle appropriately
 
-        if not self.verbose:
-           print(token_data['access_token'])
-
-        # Save the token to a file
-        with open("user_token.json", "w") as file:
-             json.dump({"token": token_data['access_token']}, file)
-
+        # Continue only if token_data is valid
+        if 'access_token' in token_data:
+            with open("/POC_APItest/user_token.json", "w") as file:
+                json.dump({"token": token_data['access_token']}, file)
+        else:
+            self.logger.error("Access token not found in token data.")
         self.auth_setup()
-        token_data = self.get_oauth_token_data()
 
-        if not self.verbose:
-            print(token_data['access_token'])
+        ##if not self.verbose:
+          ##  print(token_data['access_token'])
 
     def auth_setup(self):
         """
@@ -89,8 +89,15 @@ class SageIDAuthAutomation:
         self.login_state = self.get_url_param(login_redirect.split("?")[1].split("&"), "state")
         self.logger.debug("Login State: " + self.login_state)
         login = self.session.get(login_redirect, headers=self.headers)
+        content = str(login.content)
+        if "encodedAuth0Config=" in content:
+             self._csrf = json.loads(base64.b64decode(content.split("encodedAuth0Config=")[1].split("\"")[1]))['extraParams']['_csrf']
+        else:
+             self.logger.error("CSRF token not found in the login response.")
+        return None
         self._csrf = json.loads(base64.b64decode(str(login.content).split("encodedAuth0Config=")[1].split("\"")[1]))['extraParams']['_csrf']
         self.logger.debug("CSRF: " + self._csrf)
+    
 
     def get_oauth_token_data(self):
         """
@@ -138,11 +145,19 @@ class SageIDAuthAutomation:
         self.logger.debug("usernamepassword/login: " + str(login_data.status_code))
 
         html = BeautifulSoup(login_data.text, features="lxml")
-        wresult = html.find('input', {'name':'wresult'})['value']
-        wctx = html.find('input', {'name':'wctx'})['value']
+        # Attempt to find `wresult` and `wctx` safely
+        wresult_element = html.find('input', {'name': 'wresult'})
+        wctx_element = html.find('input', {'name': 'wctx'})
 
-        self.logger.debug("wresult: " + wresult)
-        self.logger.debug("wctx:" + wctx)
+        # Check if the elements are found and log an error if they are missing
+        if wresult_element and wctx_element:
+            wresult = wresult_element['value']
+            wctx = wctx_element['value']
+            self.logger.debug("wresult: " + wresult)
+            self.logger.debug("wctx: " + wctx)
+        else:
+            self.logger.error("Failed to find 'wresult' or 'wctx' in the HTML response.")
+        return None  # Or handle this case as needed
 
         login_callback_data = {
             "wctx": wctx,
