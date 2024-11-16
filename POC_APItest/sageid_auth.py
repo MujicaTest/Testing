@@ -59,6 +59,8 @@ class SageIDAuthAutomation:
         token_data = self.get_oauth_token_data()
         if token_data is None:
             self.logger.error("Failed to retrieve token data.")
+            self.logger.debug("Response content for troubleshooting: " + str(response.content))
+
             return  # Or handle appropriately
 
         # Continue only if token_data is valid
@@ -67,10 +69,11 @@ class SageIDAuthAutomation:
                 json.dump({"token": token_data['access_token']}, file)
         else:
             self.logger.error("Access token not found in token data.")
-        self.auth_setup()
+            self.auth_setup()
+            self.logger.debug("Response content for troubleshooting: " + str(response.content))
 
-        ##if not self.verbose:
-          ##  print(token_data['access_token'])
+        #if not self.verbose:
+            #print(token_data['access_token'])
 
     def auth_setup(self):
         """
